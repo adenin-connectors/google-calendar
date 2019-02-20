@@ -1,7 +1,6 @@
 ConnectorTitle: GoogleCalendar
 AccessCodeServiceEndpoint: https://accounts.google.com/o/oauth2/v2/auth
 AccessTokenServiceEndpoint: https://accounts.google.com/o/oauth2/token
-ApiEndPoint: https://www.googleapis.com
 UserName: hide
 UserPassword: hide
 ClientId: required
@@ -25,9 +24,6 @@ Custom2Hint: ''
 Custom3Label: Custom Field 3
 Custom3Hint: ''
 Scopes:
-- ScopeName: api
-  ScopeDescription: API Access
-  IsDefault: false
 - ScopeName: https://www.googleapis.com/auth/calendar
   ScopeDescription: Access Google Calendar
   IsDefault: false

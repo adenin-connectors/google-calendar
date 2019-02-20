@@ -1,0 +1,8 @@
+ServiceName: 'mymeetings-status'
+InterfaceName: 'items'
+Description: 'mymeetings-status'
+APIDoc: ''
+Interfaces: 'search,pagination'
+RequiredScopes: ''
+AdditionalParameters:
+Method: ''
