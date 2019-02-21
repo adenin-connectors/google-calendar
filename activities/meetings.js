@@ -4,10 +4,9 @@ const api = require('./common/api');
 module.exports = async function (activity) {
 
   try {
-
     api.initialize(activity);
 
-    const response = await api('/calendar/v3/calendars/primary/events');
+    const response = await api.getTodaysEvents('/calendar/v3/calendars/primary/events');
 
     // convert response to items[]
     activity.Response.Data = api.convertIssues(response);

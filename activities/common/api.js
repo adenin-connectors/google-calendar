@@ -6,7 +6,7 @@ const HttpsAgent = HttpAgent.HttpsAgent;
 
 let _activity = null;
 
-function api(path, opts) {
+function api(path, opts, timeMin, timeMax) {
   if (typeof path !== 'string') {
     return Promise.reject(new TypeError(`Expected \`path\` to be a string, got ${typeof path}`));
   }
@@ -29,9 +29,8 @@ function api(path, opts) {
   if (opts.token) {
     opts.headers.Authorization = `Bearer ${opts.token}`;
   }
-  var now = new Date();
-  now = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 24, 0, 0, 0);
-  const url = /^http(s)\:\/\/?/.test(path) && opts.endpoint ? path : opts.endpoint + path + "?timeMax=" + now.toISOString();
+
+  const url = /^http(s)\:\/\/?/.test(path) && opts.endpoint ? path : opts.endpoint + path + "?timeMax=" + timeMax + "&timeMin=" + timeMin;
 
   if (opts.stream) {
     return got.stream(url, opts);
@@ -78,6 +77,36 @@ for (const x of helpers) {
   const method = x.toUpperCase();
   api[x] = (url, opts) => api(url, Object.assign({}, opts, { method }));
   api.stream[x] = (url, opts) => api.stream(url, Object.assign({}, opts, { method }));
+}
+
+/**returns all events for today until midnight*/
+api.getTodaysEvents = function (path) {
+  let now = getUTCTime(); 
+  let midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 0);
+
+  let timeMin = ISODateString(now);
+  let timeMax = ISODateString(midnight);
+
+  return api(path, null, timeMin, timeMax);
+}
+
+/**returns UTCNow  time*/
+function getUTCTime() {
+  let d = new Date();
+  //this is where i tried to add 12 hrs and api didnt work (nowUTC is miliseconds so '+(10*60*60*1000)' should be added)
+  var nowUTC = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds());
+  
+  return new Date(nowUTC);
+}
+/**formats string to match google api requirements*/
+function ISODateString(d) {
+  function pad(n) { return n < 10 ? '0' + n : n }
+  return d.getUTCFullYear() + '-'
+    + pad(d.getUTCMonth() + 1) + '-'
+    + pad(d.getUTCDate()) + 'T'
+    + pad(d.getUTCHours()) + ':'
+    + pad(d.getUTCMinutes()) + ':'
+    + pad(d.getUTCSeconds()) + 'Z'
 }
 
 module.exports = api;
