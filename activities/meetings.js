@@ -6,7 +6,7 @@ module.exports = async function (activity) {
   try {
     api.initialize(activity);
 
-    const response = await api.getTodaysEvents('/calendar/v3/calendars/primary/events');
+    const response = await api.getTodaysEvents();
 
     // convert response to items[]
     activity.Response.Data = api.convertIssues(response);
@@ -21,5 +21,4 @@ module.exports = async function (activity) {
     activity.Response.Data = { ErrorText: m };
 
   }
-
 };

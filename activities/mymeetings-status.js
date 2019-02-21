@@ -8,11 +8,9 @@ module.exports = async (activity) => {
   try {
     api.initialize(activity);
 
-    const response = await api.getTodaysEvents('/calendar/v3/calendars/primary/events');
+    const response = await api.getTodaysEvents();
 
     let events = response.body.items;
-    let nextEvent = getNexEvent(events);
-    let eventTimer = getTimeDiference(nextEvent.start.dateTime);
 
     let eventStatus = {
       title: 'Events Today',
@@ -21,6 +19,9 @@ module.exports = async (activity) => {
     };
 
     if (events.length != 0) {
+      let nextEvent = getNexEvent(events);
+      let eventTimer = getTimeDiference(nextEvent.start.dateTime);
+
       eventStatus = {
         ...eventStatus,
         description: `The next event '${nextEvent.summary}' is scheduled in ${eventTimer.getHours()} hours and  ${eventTimer.getMinutes()} minutes.`,
@@ -47,12 +48,15 @@ module.exports = async (activity) => {
 function getNexEvent(events) {
   let nextEvent = null;
   let nextEventMilis = 0;
+
   for (let i = 0; i < events.length; i++) {
     let tempDate = Date.parse(events[i].start.dateTime);
+
     if (nextEventMilis == 0) {
       nextEventMilis = tempDate;
       nextEvent = events[i];
     }
+
     if (nextEventMilis > tempDate) {
       nextEventMilis = tempDate;
       nextEvent = events[i];
@@ -66,6 +70,6 @@ function getNexEvent(events) {
 function getTimeDiference(nextEventsTime) {
   let nowInMilis = new Date();
   let nextEventMilis = Date.parse(nextEventsTime);
-  
+
   return new Date(nextEventMilis - nowInMilis);
 }

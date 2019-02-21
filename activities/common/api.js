@@ -6,10 +6,7 @@ const HttpsAgent = HttpAgent.HttpsAgent;
 
 let _activity = null;
 
-function api(path, opts, timeMin, timeMax) {
-  if (typeof path !== 'string') {
-    return Promise.reject(new TypeError(`Expected \`path\` to be a string, got ${typeof path}`));
-  }
+function api(opts, timeMin, timeMax) {
 
   opts = Object.assign({
     json: true,
@@ -29,7 +26,7 @@ function api(path, opts, timeMin, timeMax) {
   if (opts.token) {
     opts.headers.Authorization = `Bearer ${opts.token}`;
   }
-
+  let path = '/calendar/v3/calendars/primary/events';
   const url = /^http(s)\:\/\/?/.test(path) && opts.endpoint ? path : opts.endpoint + path + "?timeMax=" + timeMax + "&timeMin=" + timeMin;
 
   if (opts.stream) {
@@ -37,7 +34,6 @@ function api(path, opts, timeMin, timeMax) {
   }
 
   return got(url, opts).catch(err => {
-
     throw err;
   });
 }
@@ -80,14 +76,14 @@ for (const x of helpers) {
 }
 
 /**returns all events for today until midnight*/
-api.getTodaysEvents = function (path) {
-  let now = getUTCTime(); 
+api.getTodaysEvents = function () {
+  let now = getUTCTime();
   let midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 0);
 
   let timeMin = ISODateString(now);
   let timeMax = ISODateString(midnight);
 
-  return api(path, null, timeMin, timeMax);
+  return api(null, timeMin, timeMax);
 }
 
 /**returns UTCNow  time*/
@@ -95,7 +91,7 @@ function getUTCTime() {
   let d = new Date();
   //this is where i tried to add 12 hrs and api didnt work (nowUTC is miliseconds so '+(10*60*60*1000)' should be added)
   var nowUTC = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds());
-  
+
   return new Date(nowUTC);
 }
 /**formats string to match google api requirements*/
