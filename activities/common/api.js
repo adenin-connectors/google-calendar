@@ -6,7 +6,10 @@ const HttpsAgent = HttpAgent.HttpsAgent;
 
 let _activity = null;
 
-function api(opts, timeMin, timeMax) {
+function api(path, opts) {
+  if (typeof path !== 'string') {
+    return Promise.reject(new TypeError(`Expected \`path\` to be a string, got ${typeof path}`));
+  }
 
   opts = Object.assign({
     json: true,
@@ -26,8 +29,8 @@ function api(opts, timeMin, timeMax) {
   if (opts.token) {
     opts.headers.Authorization = `Bearer ${opts.token}`;
   }
-  let path = '/calendar/v3/calendars/primary/events';
-  const url = /^http(s)\:\/\/?/.test(path) && opts.endpoint ? path : opts.endpoint + path + "?timeMax=" + timeMax + "&timeMin=" + timeMin;
+
+  const url = /^http(s)\:\/\/?/.test(path) && opts.endpoint ? path : opts.endpoint + path;
 
   if (opts.stream) {
     return got.stream(url, opts);
@@ -45,7 +48,7 @@ api.convertIssues = function (response) {
   // iterate through each issue and extract id, title, etc. into a new array
   for (let i = 0; i < meetings.length; i++) {
     let raw = meetings[i];
-    let item = { id: raw.id, title: raw.summary, description: raw.description, link: raw.htmlLink, raw: raw }
+    let item = { id: raw.id, title: raw.summary, description: raw.description, link: raw.htmlLink, raw: raw };
     items.push(item);
   }
 
@@ -83,7 +86,8 @@ api.getTodaysEvents = function () {
   let timeMin = ISODateString(now);
   let timeMax = ISODateString(midnight);
 
-  return api(null, timeMin, timeMax);
+  let path = '/calendar/v3/calendars/primary/events' + "?timeMax=" + timeMax + "&timeMin=" + timeMin;
+  return api(path);
 }
 
 /**returns UTCNow  time*/
