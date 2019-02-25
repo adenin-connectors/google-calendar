@@ -80,26 +80,19 @@ for (const x of helpers) {
 
 /**returns all events for today until midnight*/
 api.getTodaysEvents = function () {
-  let now = getUTCTime();
+  let now = new Date(new Date().toUTCString());
   let midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 0);
 
   let timeMin = ISODateString(now);
   let timeMax = ISODateString(midnight);
 
-  let path = '/calendar/v3/calendars/primary/events' + "?timeMax=" + timeMax + "&timeMin=" + timeMin;
+  let path = '/calendar/v3/calendars/primary/events' + "?timeMax=" + timeMax + "&timeMin=" + timeMin + "&timeZone=UTC%2B0%3A00";
   return api(path);
 }
 
-/**returns UTCNow  time*/
-function getUTCTime() {
-  let d = new Date();
-  //this is where i tried to add 12 hrs and api didnt work (nowUTC is miliseconds so '+(10*60*60*1000)' should be added)
-  var nowUTC = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds());
-
-  return new Date(nowUTC);
-}
+/*
 /**formats string to match google api requirements*/
-function ISODateString(d) {
+function ISODateString (d) {
   function pad(n) { return n < 10 ? '0' + n : n }
   return d.getUTCFullYear() + '-'
     + pad(d.getUTCMonth() + 1) + '-'

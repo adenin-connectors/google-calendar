@@ -18,16 +18,19 @@ module.exports = async (activity) => {
       urlLabel: 'All events',
     };
 
-    if (events.length != 0) {
+    let eventCount = events.length;
+
+    if (eventCount != 0) {
       let nextEvent = getNexEvent(events);
-      let eventTime = new Date(Date.parse(nextEvent.start.dateTime));
-      let hrs = eventTime.getHours();
-      let mins = eventTime.getMinutes();
-      let eventCount = events.length;
+      let eventTimer = calculateTimeDiference(nextEvent.start.dateTime);
+      let hrs = eventTimer.getHours();
+      let mins = eventTimer.getMinutes();
 
       eventStatus = {
         ...eventStatus,
-        description: `You have ${eventCount > 1 ? eventCount + " events" : eventCount + " event"} today.The next event '${nextEvent.summary}' is scheduled at ${hrs > 9 ? hrs : "0" + hrs}:${mins > 9 ? mins : "0" + mins}.`,
+        description: `You have ${eventCount > 1 ? eventCount + " events" : eventCount + " event"} today.` +
+          `The next event '${nextEvent.summary}' is scheduled in${hrs > 0 ? (hrs > 1 ? " " + hrs + " hours and " : " " + hrs + " hour and ") : ""}` +
+          `${mins > 9 ? mins : "0" + mins}${mins != 1 ? " minutes" : " minute"}.`,
         color: 'blue',
         value: eventCount,
         actionable: true
@@ -67,4 +70,12 @@ function getNexEvent(events) {
   }
 
   return nextEvent;
+}
+/** calculaes time diference between now(utc0) and next event */
+function calculateTimeDiference(nextEventsTime) {
+  let d = new Date(); //nowInMilis
+  var nowUTC = Date.UTC(d.getFullYear(), d.getMonth(), d.getUTCDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
+  let nextEventMilis = Date.parse(nextEventsTime);
+
+  return new Date(nextEventMilis - nowUTC);
 }
