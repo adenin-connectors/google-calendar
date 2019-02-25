@@ -1,6 +1,6 @@
-ServiceName: 'mymeetings-status'
+ServiceName: 'myevent-status'
 InterfaceName: 'items'
-Description: 'mymeetings-status'
+Description: 'myevent-status'
 APIDoc: ''
 Interfaces: 'search,pagination'
 RequiredScopes: ''

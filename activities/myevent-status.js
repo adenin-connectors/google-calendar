@@ -20,21 +20,24 @@ module.exports = async (activity) => {
 
     if (events.length != 0) {
       let nextEvent = getNexEvent(events);
-      let eventTimer = getTimeDiference(nextEvent.start.dateTime);
+      let eventTime = new Date(Date.parse(nextEvent.start.dateTime));
+      let hrs = eventTime.getHours();
+      let mins = eventTime.getMinutes();
+      let eventCount = events.length;
 
       eventStatus = {
         ...eventStatus,
-        description: `The next event '${nextEvent.summary}' is scheduled in ${eventTimer.getHours()} hours and  ${eventTimer.getMinutes()} minutes.`,
+        description: `You have ${eventCount > 1 ? eventCount + " events" : eventCount + " event"} today.The next event '${nextEvent.summary}' is scheduled at ${hrs > 9 ? hrs : "0" + hrs}:${mins > 9 ? mins : "0" + mins}.`,
         color: 'blue',
-        value: events.length,
+        value: eventCount,
         actionable: true
-      }
+      };
     } else {
       eventStatus = {
         ...eventStatus,
         description: `You have no events today.`,
         actionable: false
-      }
+      };
     }
 
     activity.Response.Data = eventStatus;
@@ -64,12 +67,4 @@ function getNexEvent(events) {
   }
 
   return nextEvent;
-}
-
-/**calculates diference between now and next event*/
-function getTimeDiference(nextEventsTime) {
-  let nowInMilis = new Date();
-  let nextEventMilis = Date.parse(nextEventsTime);
-
-  return new Date(nextEventMilis - nowInMilis);
 }
