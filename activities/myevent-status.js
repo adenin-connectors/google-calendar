@@ -1,7 +1,6 @@
 'use strict';
 
-const logger = require('@adenin/cf-logger');
-const handleError = require('@adenin/cf-activity').handleError;
+const cfActivity = require('@adenin/cf-activity');
 const api = require('./common/api');
 
 module.exports = async (activity) => {
@@ -9,6 +8,10 @@ module.exports = async (activity) => {
     api.initialize(activity);
 
     const response = await api.getTodaysEvents();
+
+    if (!cfActivity.isResponseOk(activity, response)) {
+      return;
+    }
 
     let events = response.body.items;
 
@@ -28,9 +31,8 @@ module.exports = async (activity) => {
 
       eventStatus = {
         ...eventStatus,
-        description: `You have ${eventCount > 1 ? eventCount + " events" : eventCount + " event"} today.` +
-          `The next event '${nextEvent.summary}' is scheduled in${hrs > 0 ? (hrs > 1 ? " " + hrs + " hours and " : " " + hrs + " hour and ") : ""}` +
-          `${mins > 9 ? mins : "0" + mins}${mins != 1 ? " minutes" : " minute"}.`,
+        description: `You have ${formatEvents(eventCount)} today.` +
+        `The next event '${nextEvent.summary}' is scheduled in${formatHours(hrs)}` + `${formatMinutes(mins)}.`,
         color: 'blue',
         value: eventCount,
         actionable: true
@@ -44,12 +46,23 @@ module.exports = async (activity) => {
     }
 
     activity.Response.Data = eventStatus;
-
   } catch (error) {
-    handleError(error, activity);
+
+    cfActivity.handleError(error, activity);
   }
 };
-
+/**helper function to format event number string based on number of events */
+function formatEvents(eventCount){
+  return eventCount > 1 ? eventCount + " events" : eventCount + " event";
+}
+/**helper function to format hours string based on number of hours */
+function formatHours(hrs){
+  return hrs > 0 ? (hrs > 1 ? " " + hrs + " hours and " : " " + hrs + " hour and ") : "";
+}
+/**helper function to format minutes string based on number of minutes */
+function formatMinutes(mins){
+  return mins > 9 ? mins : "0" + mins + mins != 1 ? " minutes" : " minute";
+}
 /**filters out first upcoming event in google calendar*/
 function getNexEvent(events) {
   let nextEvent = null;

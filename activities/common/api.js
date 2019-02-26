@@ -92,7 +92,7 @@ api.getTodaysEvents = function () {
 
 /*
 /**formats string to match google api requirements*/
-function ISODateString (d) {
+function ISODateString(d) {
   function pad(n) { return n < 10 ? '0' + n : n }
   return d.getUTCFullYear() + '-'
     + pad(d.getUTCMonth() + 1) + '-'
