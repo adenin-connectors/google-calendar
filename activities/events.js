@@ -5,7 +5,6 @@ const api = require('./common/api');
 
 
 module.exports = async function (activity) {
-
   try {
     api.initialize(activity);
 
@@ -14,10 +13,9 @@ module.exports = async function (activity) {
     if (!cfActivity.isResponseOk(activity, response)) {
       return;
     }
-    // convert response to items[]
-    activity.Response.Data = api.convertIssues(response);
 
+    activity.Response.Data = api.convertResponse(response);
   } catch (error) {
-    cfActivity.handleError(error, activity);
+    cfActivity.handleError(activity, error);
   }
 };

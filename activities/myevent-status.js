@@ -6,7 +6,6 @@ const api = require('./common/api');
 module.exports = async (activity) => {
   try {
     api.initialize(activity);
-
     const response = await api.getTodaysEvents();
 
     if (!cfActivity.isResponseOk(activity, response)) {
@@ -48,7 +47,7 @@ module.exports = async (activity) => {
     activity.Response.Data = eventStatus;
   } catch (error) {
 
-    cfActivity.handleError(error, activity);
+    cfActivity.handleError(activity, error);
   }
 };
 /**helper function to format event number string based on number of events */

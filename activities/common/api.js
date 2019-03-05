@@ -41,7 +41,7 @@ function api(path, opts) {
   });
 }
 // convert response from /issues endpoint to 
-api.convertIssues = function (response) {
+api.convertResponse = function (response) {
   let items = [];
   let meetings = response.body.items;
 
@@ -53,7 +53,7 @@ api.convertIssues = function (response) {
   }
 
   return { items: items };
-}
+};
 const helpers = [
   'get',
   'post',
@@ -88,9 +88,8 @@ api.getTodaysEvents = function () {
 
   let path = '/calendar/v3/calendars/primary/events' + "?timeMax=" + timeMax + "&timeMin=" + timeMin + "&timeZone=UTC%2B0%3A00";
   return api(path);
-}
+};
 
-/*
 /**formats string to match google api requirements*/
 function ISODateString(d) {
   function pad(n) { return n < 10 ? '0' + n : n }
