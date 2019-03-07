@@ -2,6 +2,7 @@
 const got = require('got');
 const isPlainObj = require('is-plain-obj');
 const HttpAgent = require('agentkeepalive');
+const cfActivity = require('@adenin/cf-activity');
 const HttpsAgent = HttpAgent.HttpsAgent;
 
 let _activity = null;
