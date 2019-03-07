@@ -78,13 +78,11 @@ for (const x of helpers) {
   api.stream[x] = (url, opts) => api.stream(url, Object.assign({}, opts, { method }));
 }
 
-/**returns all events for today until midnight*/
+/**returns all events from now until midnight*/
 api.getTodaysEvents = function () {
-  let now = new Date(new Date().toUTCString());
-  let midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 0);
-
-  let timeMin = ISODateString(now);
-  let timeMax = ISODateString(midnight);
+  var dateRange = cfActivity.dateRange(_activity, "today");
+  let timeMin = ISODateString(new Date(new Date().toUTCString())); //time now in UTC+0
+  let timeMax = ISODateString(new Date(dateRange.endDate));
 
   let path = '/calendar/v3/calendars/primary/events' + "?timeMax=" + timeMax + "&timeMin=" + timeMin + "&timeZone=UTC%2B0%3A00";
   return api(path);
