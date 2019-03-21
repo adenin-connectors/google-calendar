@@ -25,20 +25,21 @@ module.exports = async (activity) => {
 
     if (eventCount != 0) {
       let nextEvent = getNexEvent(events);
-      let eventTimer = calculateTimeDiference(nextEvent.start.dateTime);
+      let timeUntilEvent = calculateTimeDiference(nextEvent.start.dateTime);
 
       let description = `You have ${formatEvents(eventCount)} today. The next event '${nextEvent.summary}' is scheduled`;
 
-      if (eventTimer < (60 * 60 * 1000)) {
-        let mins = new Date(eventTimer).getMinutes();
+      if (timeUntilEvent.getHours() == 0) {
+        let mins = timeUntilEvent.getMinutes();
         description += ` in ${formatMinutes(mins)}.`;
       } else {
-        let temptime = moment(nextEvent.start.dateTime)
+        let eventDate = new Date(nextEvent.start.dateTime);
+        let temptime = moment(eventDate)
           .tz(activity.Context.UserTimezone)
           .locale(activity.Context.UserLocale)
           .format('LT');
 
-        description += ` at ${temptime}.`;
+        description += `${getTimePrefix(activity, eventDate)} at ${temptime}.`;
       }
 
       eventStatus = {
@@ -100,5 +101,24 @@ function calculateTimeDiference(nextEventsTime) {
   var nowUTC = Date.UTC(d.getFullYear(), d.getMonth(), d.getUTCDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
   let nextEventMilis = Date.parse(nextEventsTime);
 
-  return nextEventMilis - nowUTC;
+  return new Date(nextEventMilis - nowUTC);
+}
+
+//** returns no prefix, 'tomorrow' prefix, or date prefix */
+function getTimePrefix(activity, date) {
+  let tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  let prefix = '';
+  if (date.getDate() == tomorrow.getDate()) {
+    prefix = ' tomorrow';
+  } else if (date > tomorrow) {
+    prefix = ` on ${moment(date)
+      .tz(activity.Context.UserTimezone)
+      .locale(activity.Context.UserLocale)
+      .format('LL')
+      }`;
+  }
+
+  return prefix;
 }
