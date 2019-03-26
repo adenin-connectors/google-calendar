@@ -1,46 +1,29 @@
 'use strict';
-
-const cfActivity = require('@adenin/cf-activity');
 const api = require('./common/api');
 const moment = require('moment-timezone');
 
 module.exports = async (activity) => {
   try {
-    api.initialize(activity);
     const response = await api.getTodaysEvents();
 
-    if (!cfActivity.isResponseOk(activity, response)) {
-      return;
-    }
+    if (Activity.isErrorResponse(response)) return;
 
     let events = response.body.items;
 
     let eventStatus = {
-      title: 'Events Today',
+      title: T('Events Today'),
       url: 'https://calendar.google.com/calendar',
-      urlLabel: 'All events',
+      urlLabel: T('All events'),
     };
 
     let eventCount = events.length;
 
     if (eventCount != 0) {
       let nextEvent = getNexEvent(events);
-      let timeUntilEvent = calculateTimeDiference(nextEvent.start.dateTime);
 
-      let description = `You have ${formatEvents(eventCount)} today. The next event '${nextEvent.summary}' is scheduled`;
-
-      if (timeUntilEvent.getHours() == 0) {
-        let mins = timeUntilEvent.getMinutes();
-        description += ` in ${formatMinutes(mins)}.`;
-      } else {
-        let eventDate = new Date(nextEvent.start.dateTime);
-        let temptime = moment(eventDate)
-          .tz(activity.Context.UserTimezone)
-          .locale(activity.Context.UserLocale)
-          .format('LT');
-
-        description += `${getTimePrefix(activity, eventDate)} at ${temptime}.`;
-      }
+      let eventFormatedTime = getEventFormatedTimeAsString(nextEvent);
+      let eventPluralorNot = eventCount > 1 ? T("events scheduled") : T("event scheduled");
+      let description = T(`You have {0} {1} today. The next event '{2}' starts{3}`, eventCount, eventPluralorNot, nextEvent.summary, eventFormatedTime);
 
       eventStatus = {
         ...eventStatus,
@@ -51,29 +34,18 @@ module.exports = async (activity) => {
       };
 
     } else {
-
       eventStatus = {
         ...eventStatus,
-        description: `You have no events today.`,
+        description: T(`You have no events today.`),
         actionable: false
       };
-
     }
 
     activity.Response.Data = eventStatus;
   } catch (error) {
-    cfActivity.handleError(activity, error);
+    Activity.handleError(error);
   }
 };
-/**helper function to format event number string based on number of events */
-function formatEvents(eventCount) {
-  return eventCount > 1 ? eventCount + " events" : eventCount + " event";
-}
-/**helper function to format minutes string based on number of minutes */
-function formatMinutes(mins) {
-  let number = mins > 9 ? mins : "0" + mins;
-  return mins != 1 ? number + " minutes" : number + " minute";
-}
 /**filters out first upcoming event in google calendar*/
 function getNexEvent(events) {
   let nextEvent = null;
@@ -103,22 +75,35 @@ function calculateTimeDiference(nextEventsTime) {
 
   return new Date(nextEventMilis - nowUTC);
 }
+//** checks if event is in less then hour, today or tomorrow and returns formated string accordingly */
+function getEventFormatedTimeAsString(nextEvent) {
+  let timeUntilEvent = calculateTimeDiference(nextEvent.start.dateTime);
+  let eventDate = new Date();
 
-//** returns no prefix, 'tomorrow' prefix, or date prefix */
-function getTimePrefix(activity, date) {
-  let tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  if (timeUntilEvent.getHours() == 0) {
+    //events that start in less then 1 hour
+    return T(` in {0} minutes.`, timeUntilEvent.getMinutes());
+  } else {
+    //events that start in more than 1 hour
+    let eventClock = moment(eventDate)
+      .tz(Activity.Context.UserTimezone)
+      .locale(Activity.Context.UserLocale)
+      .format('LT');
 
-  let prefix = '';
-  if (date.getDate() == tomorrow.getDate()) {
-    prefix = ' tomorrow';
-  } else if (date > tomorrow) {
-    prefix = ` on ${moment(date)
-      .tz(activity.Context.UserTimezone)
-      .locale(activity.Context.UserLocale)
-      .format('LL')
-      }`;
+    let datePrefix = '';
+    let momentDate = '';
+    if (timeUntilEvent.getDate() == 2) {
+      //events that start tomorrow
+      datePrefix = ' tomorrow';
+    } else if (timeUntilEvent.getDate() > 2) {
+      //events that start day after tomorrow and later
+      datePrefix = ' on ';
+      momentDate = moment(eventDate)
+        .tz(Activity.Context.UserTimezone)
+        .locale(Activity.Context.UserLocale)
+        .format('LL');
+    }
+
+    return T(`{0}{1}{2}{3}.`, T(datePrefix), momentDate, T(" at "), eventClock);
   }
-
-  return prefix;
 }

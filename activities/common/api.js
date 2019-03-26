@@ -1,11 +1,7 @@
 'use strict';
 const got = require('got');
-const isPlainObj = require('is-plain-obj');
 const HttpAgent = require('agentkeepalive');
-const cfActivity = require('@adenin/cf-activity');
 const HttpsAgent = HttpAgent.HttpsAgent;
-
-let _activity = null;
 
 function api(path, opts) {
   if (typeof path !== 'string') {
@@ -14,7 +10,7 @@ function api(path, opts) {
 
   opts = Object.assign({
     json: true,
-    token: _activity.Context.connector.token,
+    token: Activity.Context.connector.token,
     endpoint: 'https://www.googleapis.com',
     agent: {
       http: new HttpAgent(),
@@ -69,10 +65,6 @@ api.stream = (url, opts) => apigot(url, Object.assign({}, opts, {
   stream: true
 }));
 
-api.initialize = function (activity) {
-  _activity = activity;
-}
-
 for (const x of helpers) {
   const method = x.toUpperCase();
   api[x] = (url, opts) => api(url, Object.assign({}, opts, { method }));
@@ -81,13 +73,16 @@ for (const x of helpers) {
 
 /**returns all events from now until midnight*/
 api.getTodaysEvents = function (pagination) {
-  var dateRange = cfActivity.dateRange(_activity, "today");
+  var dateRange = Activity.dateRange("today");
   let timeMin = ISODateString(new Date(new Date().toUTCString())); //time now in UTC+0
-  let timeMax = ISODateString(new Date(dateRange.endDate));
+  let q= new Date(dateRange.endDate);
+  q.setDate(q.getDate()+3);
+  let timeMax = ISODateString(q);
+  
 
-  let path = '/calendar/v3/calendars/primary/events' + "?timeMax=" + timeMax + "&timeMin=" + timeMin +`&timeZone=UTC%2B0%3A00`;
-  if(pagination){
-    path+=`&maxResults=${pagination.pageSize}${pagination.nextpage == null ? '' : '&pageToken=' + pagination.nextpage}`;
+  let path = '/calendar/v3/calendars/primary/events' + "?timeMax=" + timeMax + "&timeMin=" + timeMin + `&timeZone=UTC%2B0%3A00`;
+  if (pagination) {
+    path += `&maxResults=${pagination.pageSize}${pagination.nextpage == null ? '' : '&pageToken=' + pagination.nextpage}`;
   }
   return api(path);
 };
