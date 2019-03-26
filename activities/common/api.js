@@ -75,10 +75,8 @@ for (const x of helpers) {
 api.getTodaysEvents = function (pagination) {
   var dateRange = Activity.dateRange("today");
   let timeMin = ISODateString(new Date(new Date().toUTCString())); //time now in UTC+0
-  let q= new Date(dateRange.endDate);
-  q.setDate(q.getDate()+3);
-  let timeMax = ISODateString(q);
-  
+  let timeMax = ISODateString(new Date(dateRange.endDate));
+
 
   let path = '/calendar/v3/calendars/primary/events' + "?timeMax=" + timeMax + "&timeMin=" + timeMin + `&timeZone=UTC%2B0%3A00`;
   if (pagination) {
