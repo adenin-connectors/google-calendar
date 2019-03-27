@@ -12,8 +12,8 @@ module.exports = async (activity) => {
 
     let eventStatus = {
       title: T('Events Today'),
-      url: 'https://calendar.google.com/calendar',
-      urlLabel: T('All events')
+      link: 'https://calendar.google.com/calendar',
+      linkLabel : T('All events')
     };
 
     let eventCount = events.length;
@@ -23,7 +23,7 @@ module.exports = async (activity) => {
 
       let eventFormatedTime = getEventFormatedTimeAsString(nextEvent);
       let eventPluralorNot = eventCount > 1 ? T("events scheduled") : T("event scheduled");
-      let description = T(`You have {0} {1} today. The next event '{2}' starts{3}`, eventCount, eventPluralorNot, nextEvent.summary, eventFormatedTime);
+      let description = T(`You have {0} {1} today. The next event '{2}' starts {3}`, eventCount, eventPluralorNot, nextEvent.summary, eventFormatedTime);
 
       eventStatus = {
         ...eventStatus,
@@ -80,7 +80,7 @@ function getEventFormatedTimeAsString(nextEvent) {
   if (diffInHrs == 0) {
     //events that start in less then 1 hour
     let diffInMins = eventTime.diff(timeNow, 'minutes');
-    return T(` in {0} minutes.`, diffInMins);
+    return T(`in {0} minutes.`, diffInMins);
   } else {
     //events that start in more than 1 hour
     let diffInDays = eventTime.diff(timeNow, 'days');
@@ -89,13 +89,13 @@ function getEventFormatedTimeAsString(nextEvent) {
     let momentDate = '';
     if (diffInDays == 1) {
       //events that start tomorrow
-      datePrefix = ' tomorrow';
+      datePrefix = 'tomorrow ';
     } else if (diffInDays > 1) {
       //events that start day after tomorrow and later
-      datePrefix = ' on ';
-      momentDate = eventTime.format('LL');
+      datePrefix = 'on ';
+      momentDate = eventTime.format('LL') + " ";
     }
 
-    return T(`{0}{1}{2}{3}.`, T(datePrefix), momentDate, T(" at "), eventTime.format('LT'));
+    return T(`{0}{1}{2}{3}.`, T(datePrefix), momentDate, T("at "), eventTime.format('LT'));
   }
 }
