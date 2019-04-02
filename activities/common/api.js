@@ -77,7 +77,6 @@ api.getTodaysEvents = function (pagination) {
   let timeMin = ISODateString(new Date(new Date().toUTCString())); //time now in UTC+0
   let timeMax = ISODateString(new Date(dateRange.endDate));
 
-
   let path = '/calendar/v3/calendars/primary/events' + "?timeMax=" + timeMax + "&timeMin=" + timeMin + `&timeZone=UTC%2B0%3A00`;
   if (pagination) {
     path += `&maxResults=${pagination.pageSize}${pagination.nextpage == null ? '' : '&pageToken=' + pagination.nextpage}`;

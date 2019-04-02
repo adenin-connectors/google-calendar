@@ -1,0 +1,55 @@
+$type: form
+properties:
+  subject:
+    type: string
+    title: Subject
+    name: subject
+    required: !!bool true
+  description:
+    type: string
+    title: Description
+    xtype: textarea
+    name: description
+  startdatetime:
+    type: string
+    title: Start Time
+    xtype: datetime
+    name: datetime
+    required: !!bool false
+  duration:
+    type: string
+    title: Duration
+    xtype: enum
+    name: duration
+    xvaluelist:
+      - value: 15
+        title: 15 min
+      - value: 30
+        title: 30 min
+      - value: 45
+        title: 45 min
+      - value: 60
+        title: 60 min
+      - value: 90
+        title: 90 min
+      - value: 120
+        title: 2 hrs
+      - value: 180
+        title: 3 hrs
+      - value: 240
+        title: 4 hrs
+      - value: 360
+        title: 6 hrs
+      - value: 480
+        title: 8 hrs
+    xgridcols: 3
+    default: 30
+rules:
+  - caption: 'Rule #1'
+    position: !!int 1
+    rule:
+      conditions:
+        kind: all
+        conditions: []
+      actions: []
+$meta: {}

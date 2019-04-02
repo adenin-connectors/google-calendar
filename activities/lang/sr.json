@@ -8,5 +8,8 @@
   "in {0} minutes.": "za {0} minuta.",
   "tomorrow ": "sutra ",
   "on ": "na ",
-  "at ": "u "
+  "at ": "u ",
+  "Event {0} created" : "Događaj {0} kreiran",
+  "Create Google Event" : "Kreiraj Google Događaj",
+  "Create Event" : "Kreiraj Događaj"
 }

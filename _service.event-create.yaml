@@ -1,0 +1,8 @@
+ServiceName: 'event-create'
+InterfaceName: 'create'
+Description: 'Create Google Event'
+APIDoc: ''
+Interfaces: ''
+RequiredScopes: ''
+AdditionalParameters:
+Method: ''
