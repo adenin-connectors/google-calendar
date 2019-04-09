@@ -33,24 +33,34 @@ function api(path, opts) {
     return got.stream(url, opts);
   }
 
-  return got(url, opts).catch(err => {
+  return got(url, opts).catch((err) => {
     throw err;
   });
 }
-// convert response from /issues endpoint to 
+// convert response from /issues endpoint to
 api.convertResponse = function (response) {
-  let items = [];
-  let meetings = response.body.items;
+  const items = [];
+  const meetings = response.body.items;
 
   // iterate through each issue and extract id, title, etc. into a new array
   for (let i = 0; i < meetings.length; i++) {
-    let raw = meetings[i];
-    let item = { id: raw.id, title: raw.summary, description: raw.description, link: raw.htmlLink, raw: raw };
+    const raw = meetings[i];
+    const item = {
+      id: raw.id,
+      title: raw.summary,
+      description: raw.description,
+      link: raw.htmlLink,
+      raw: raw
+    };
+
     items.push(item);
   }
 
-  return { items: items };
+  return {
+    items: items
+  };
 };
+
 const helpers = [
   'get',
   'post',
@@ -60,39 +70,45 @@ const helpers = [
   'delete'
 ];
 
-api.stream = (url, opts) => apigot(url, Object.assign({}, opts, {
+api.stream = (url, opts) => got(url, Object.assign({}, opts, {
   json: false,
   stream: true
 }));
 
 for (const x of helpers) {
   const method = x.toUpperCase();
-  api[x] = (url, opts) => api(url, Object.assign({}, opts, { method }));
-  api.stream[x] = (url, opts) => api.stream(url, Object.assign({}, opts, { method }));
+  api[x] = (url, opts) => api(url, Object.assign({}, opts, {method}));
+  api.stream[x] = (url, opts) => api.stream(url, Object.assign({}, opts, {method}));
 }
 
 /**returns all events from now until midnight*/
 api.getTodaysEvents = function (pagination) {
-  var dateRange = Activity.dateRange("today");
-  let timeMin = ISODateString(new Date(new Date().toUTCString())); //time now in UTC+0
-  let timeMax = ISODateString(new Date(dateRange.endDate));
+  const dateRange = Activity.dateRange('today');
 
-  let path = '/calendar/v3/calendars/primary/events' + "?timeMax=" + timeMax + "&timeMin=" + timeMin + `&timeZone=UTC%2B0%3A00`;
+  const timeMin = ISODateString(new Date(new Date().toUTCString())); //time now in UTC+0
+  const timeMax = ISODateString(new Date(dateRange.endDate));
+
+  let path = '/calendar/v3/calendars/primary/events?timeMax=' + timeMax + '&timeMin=' + timeMin + '&timeZone=UTC%2B0%3A00';
+
   if (pagination) {
-    path += `&maxResults=${pagination.pageSize}${pagination.nextpage == null ? '' : '&pageToken=' + pagination.nextpage}`;
+    path += `&maxResults=${pagination.pageSize}${pagination.nextpage === null ? '' : '&pageToken=' + pagination.nextpage}`;
   }
+
   return api(path);
 };
 
 /**formats string to match google api requirements*/
 function ISODateString(d) {
-  function pad(n) { return n < 10 ? '0' + n : n }
-  return d.getUTCFullYear() + '-'
-    + pad(d.getUTCMonth() + 1) + '-'
-    + pad(d.getUTCDate()) + 'T'
-    + pad(d.getUTCHours()) + ':'
-    + pad(d.getUTCMinutes()) + ':'
-    + pad(d.getUTCSeconds()) + 'Z'
+  function pad(n) {
+    return n < 10 ? '0' + n : n;
+  }
+
+  return d.getUTCFullYear() + '-' +
+    pad(d.getUTCMonth() + 1) + '-' +
+    pad(d.getUTCDate()) + 'T' +
+    pad(d.getUTCHours()) + ':' +
+    pad(d.getUTCMinutes()) + ':' +
+    pad(d.getUTCSeconds()) + 'Z';
 }
 
 module.exports = api;
