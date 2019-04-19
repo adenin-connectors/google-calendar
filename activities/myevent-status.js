@@ -4,16 +4,17 @@ const moment = require('moment-timezone');
 
 module.exports = async (activity) => {
   try {
+    api.initialize(activity);
     const response = await api.getTodaysEvents();
 
-    if (Activity.isErrorResponse(response)) return;
+    if ($.isErrorResponse(activity, response)) return;
 
     let events = response.body.items;
 
     let eventStatus = {
-      title: T('Events Today'),
+      title: T(activity, 'Events Today'),
       link: 'https://calendar.google.com/calendar',
-      linkLabel : T('All events')
+      linkLabel: T(activity, 'All events')
     };
 
     let eventCount = events.length;
@@ -21,9 +22,9 @@ module.exports = async (activity) => {
     if (eventCount != 0) {
       let nextEvent = getNexEvent(events);
 
-      let eventFormatedTime = getEventFormatedTimeAsString(nextEvent);
-      let eventPluralorNot = eventCount > 1 ? T("events scheduled") : T("event scheduled");
-      let description = T(`You have {0} {1} today. The next event '{2}' starts {3}`, eventCount, eventPluralorNot, nextEvent.summary, eventFormatedTime);
+      let eventFormatedTime = getEventFormatedTimeAsString(activity, nextEvent);
+      let eventPluralorNot = eventCount > 1 ? T(activity, "events scheduled") : T(activity, "event scheduled");
+      let description = T(activity, `You have {0} {1} today. The next event '{2}' starts {3}`, eventCount, eventPluralorNot, nextEvent.summary, eventFormatedTime);
 
       eventStatus = {
         ...eventStatus,
@@ -36,14 +37,14 @@ module.exports = async (activity) => {
     } else {
       eventStatus = {
         ...eventStatus,
-        description: T(`You have no events today.`),
+        description: T(activity, `You have no events today.`),
         actionable: false
       };
     }
 
     activity.Response.Data = eventStatus;
   } catch (error) {
-    Activity.handleError(error);
+    $.handleError(activity, error);
   }
 };
 /**filters out first upcoming event in google calendar*/
@@ -69,10 +70,10 @@ function getNexEvent(events) {
 }
 
 //** checks if event is in less then hour, today or tomorrow and returns formated string accordingly */
-function getEventFormatedTimeAsString(nextEvent) {
+function getEventFormatedTimeAsString(activity, nextEvent) {
   let eventTime = moment(nextEvent.start.dateTime)
-    .tz(Activity.Context.UserTimezone)
-    .locale(Activity.Context.UserLocale);
+    .tz(activity.Context.UserTimezone)
+    .locale(activity.Context.UserLocale);
   let timeNow = moment(new Date());
 
   let diffInHrs = eventTime.diff(timeNow, 'hours');
