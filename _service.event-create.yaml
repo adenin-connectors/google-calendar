@@ -1,6 +1,5 @@
-ServiceName: 'event-create'
 InterfaceName: 'create'
-Description: 'Create Google Event'
+Description: 'Create Event'
 APIDoc: ''
 Interfaces: ''
 RequiredScopes: ''

@@ -1,0 +1,7 @@
+InterfaceName: items
+Description: List Of Events
+APIDoc: ''
+Interfaces: 'daterange,pagination,status'
+RequiredScopes: ''
+AdditionalParameters:
+Method: ''

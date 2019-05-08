@@ -1,8 +1,0 @@
-ServiceName: 'events'
-InterfaceName: items
-Description: List Of Daily Events
-APIDoc: ''
-Interfaces: 'search,pagination'
-RequiredScopes: ''
-AdditionalParameters:
-Method: ''

@@ -61,7 +61,7 @@ for (const x of helpers) {
 }
 
 /**returns all events from now until midnight*/
-api.getTodaysEvents = function (pagination) {
+api.getEventsWithDaterange = function (pagination) {
   const dateRange = $.dateRange(_activity,'today');
 
   const timeMin = ISODateString(new Date(new Date().toUTCString())); //time now in UTC+0
