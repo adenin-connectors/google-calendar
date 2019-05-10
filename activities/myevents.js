@@ -4,21 +4,41 @@ const moment = require('moment-timezone');
 
 module.exports = async function (activity) {
   try {
-    let pagination = $.pagination(activity);
     api.initialize(activity);
-    const response = await api.getEventsWithDaterange(pagination);
+    const dateRange = $.dateRange(activity, 'today');
+    const timeMin = ISODateString(new Date(new Date().toUTCString())); //time now in UTC+0
+    const timeMax = ISODateString(new Date(dateRange.endDate));
 
+    let allEvents = [];
+
+    let path = '/calendar/v3/calendars/primary/events?timeMax=' + timeMax + '&timeMin=' + timeMin + '&timeZone=UTC%2B0%3A00&maxResults=2500';
+    const response = await api(path);
     if ($.isErrorResponse(activity, response)) return;
+    allEvents.push(...response.body.items);
 
-    activity.Response.Data.items = convertResponse(response);
-    let value = activity.Response.Data.items.items.length;
+    let nextPageToken = response.body.nextPageToken;
+
+    while (nextPageToken) {
+      let nextPagePath = '/calendar/v3/calendars/primary/events?timeMax=' + timeMax + '&timeMin=' + timeMin + '&timeZone=UTC%2B0%3A00&maxResults=2500' +
+        `&pageToken=${nextPageToken}`;
+      const nextPage = await api(nextPagePath);
+      if ($.isErrorResponse(activity, nextPage)) return;
+      allEvents.push(...nextPage.body.items);
+      nextPageToken = nextPage.body.nextPageToken;
+    }
+
+    let value = allEvents.length;
+    let pagination = $.pagination(activity);
+    let pagiantedItems = paginateItems(allEvents, pagination);
+
+    activity.Response.Data.items = convertResponse(pagiantedItems);
     activity.Response.Data.title = T(activity, 'Events Today');
     activity.Response.Data.link = `https://calendar.google.com/calendar`;
     activity.Response.Data.linkLabel = T(activity, 'All events');
     activity.Response.Data.actionable = value > 0;
 
     if (value > 0) {
-      let nextEvent = getNexEvent(response.body.items);
+      let nextEvent = getNexEvent(allEvents);
 
       let eventFormatedTime = getEventFormatedTimeAsString(activity, nextEvent);
       let eventPluralorNot = value > 1 ? T(activity, "events scheduled") : T(activity, "event scheduled");
@@ -30,16 +50,13 @@ module.exports = async function (activity) {
     } else {
       activity.Response.Data.description = T(activity, `You have no events today.`);
     }
-
-    if (response.body.nextPageToken) activity.Response.Data._nextpage = response.body.nextPageToken;
   } catch (error) {
     $.handleError(activity, error);
   }
 };
 // convert response from /issues endpoint to
-function convertResponse(response) {
+function convertResponse(events) {
   const items = [];
-  const events = response.body.items;
 
   // iterate through each issue and extract id, title, etc. into a new array
   for (let i = 0; i < events.length; i++) {
@@ -48,7 +65,7 @@ function convertResponse(response) {
       id: raw.id,
       title: raw.summary,
       description: raw.description,
-      date: raw.created,
+      date: raw.start.dateTime,
       link: raw.htmlLink,
       raw: raw
     };
@@ -91,7 +108,7 @@ function getEventFormatedTimeAsString(activity, nextEvent) {
   if (diffInHrs == 0) {
     //events that start in less then 1 hour
     let diffInMins = eventTime.diff(timeNow, 'minutes');
-    return T(activity,`in {0} minutes.`, diffInMins);
+    return T(activity, `in {0} minutes.`, diffInMins);
   } else {
     //events that start in more than 1 hour
     let diffInDays = eventTime.diff(timeNow, 'days');
@@ -107,6 +124,35 @@ function getEventFormatedTimeAsString(activity, nextEvent) {
       momentDate = eventTime.format('LL') + " ";
     }
 
-    return T(activity,`{0}{1}{2}{3}.`, T(activity,datePrefix), momentDate, T(activity,"at "), eventTime.format('LT'));
+    return T(activity, `{0}{1}{2}{3}.`, T(activity, datePrefix), momentDate, T(activity, "at "), eventTime.format('LT'));
   }
+}
+/**formats string to match google api requirements*/
+function ISODateString(d) {
+  function pad(n) {
+    return n < 10 ? '0' + n : n;
+  }
+
+  return d.getUTCFullYear() + '-' +
+    pad(d.getUTCMonth() + 1) + '-' +
+    pad(d.getUTCDate()) + 'T' +
+    pad(d.getUTCHours()) + ':' +
+    pad(d.getUTCMinutes()) + ':' +
+    pad(d.getUTCSeconds()) + 'Z';
+}
+//** paginate items[] based on provided pagination */
+function paginateItems(items, pagination) {
+  let pagiantedItems = [];
+  const pageSize = parseInt(pagination.pageSize);
+  const offset = (parseInt(pagination.page) - 1) * pageSize;
+
+  if (offset > items.length) return pagiantedItems;
+
+  for (let i = offset; i < offset + pageSize; i++) {
+    if (i >= items.length) {
+      break;
+    }
+    pagiantedItems.push(items[i]);
+  }
+  return pagiantedItems;
 }
