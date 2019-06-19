@@ -11,7 +11,8 @@ module.exports = async function (activity) {
 
     let allEvents = [];
 
-    let path = '/calendar/v3/calendars/primary/events?timeMax=' + timeMax + '&timeMin=' + timeMin + '&timeZone=UTC%2B0%3A00&maxResults=2500';
+    let path = '/calendar/v3/calendars/primary/events?timeMax=' + timeMax + '&timeMin=' + timeMin + '&timeZone=UTC%2B0%3A00&maxResults=2500' +
+      '&singleEvents=true&orderBy=startTime';
     const response = await api(path);
     if ($.isErrorResponse(activity, response)) return;
     allEvents.push(...response.body.items);
@@ -20,7 +21,7 @@ module.exports = async function (activity) {
 
     while (nextPageToken) {
       let nextPagePath = '/calendar/v3/calendars/primary/events?timeMax=' + timeMax + '&timeMin=' + timeMin + '&timeZone=UTC%2B0%3A00&maxResults=2500' +
-        `&pageToken=${nextPageToken}`;
+        `&pageToken=${nextPageToken}&singleEvents=true&orderBy=startTime`;
       const nextPage = await api(nextPagePath);
       if ($.isErrorResponse(activity, nextPage)) return;
       allEvents.push(...nextPage.body.items);
@@ -45,6 +46,7 @@ module.exports = async function (activity) {
       let description = T(activity, `You have {0} {1} today. The next event '{2}' starts {3}`, value, eventPluralorNot, nextEvent.summary, eventFormatedTime);
 
       activity.Response.Data.value = value;
+      activity.Response.Data.date = activity.Response.Data.items[0].date; // default sortorder is ascending
       activity.Response.Data.color = 'blue';
       activity.Response.Data.description = description;
     } else {
