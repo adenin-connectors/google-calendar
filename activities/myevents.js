@@ -33,24 +33,27 @@ module.exports = async function (activity) {
     let pagiantedItems = paginateItems(allEvents, pagination);
 
     activity.Response.Data.items = convertResponse(pagiantedItems);
-    activity.Response.Data.title = T(activity, 'Events Today');
-    activity.Response.Data.link = `https://calendar.google.com/calendar`;
-    activity.Response.Data.linkLabel = T(activity, 'All events');
-    activity.Response.Data.actionable = value > 0;
+    if (parseInt(pagination.page) == 1) {
 
-    if (value > 0) {
-      let nextEvent = getNexEvent(allEvents);
+      activity.Response.Data.title = T(activity, 'Events Today');
+      activity.Response.Data.link = `https://calendar.google.com/calendar`;
+      activity.Response.Data.linkLabel = T(activity, 'All events');
+      activity.Response.Data.actionable = value > 0;
 
-      let eventFormatedTime = getEventFormatedTimeAsString(activity, nextEvent);
-      let eventPluralorNot = value > 1 ? T(activity, "events scheduled") : T(activity, "event scheduled");
-      let description = T(activity, `You have {0} {1} today. The next event '{2}' starts {3}`, value, eventPluralorNot, nextEvent.summary, eventFormatedTime);
+      if (value > 0) {
+        let nextEvent = getNexEvent(allEvents);
 
-      activity.Response.Data.value = value;
-      activity.Response.Data.date = activity.Response.Data.items[0].date; // default sortorder is ascending
-      activity.Response.Data.color = 'blue';
-      activity.Response.Data.description = description;
-    } else {
-      activity.Response.Data.description = T(activity, `You have no events today.`);
+        let eventFormatedTime = getEventFormatedTimeAsString(activity, nextEvent);
+        let eventPluralorNot = value > 1 ? T(activity, "events scheduled") : T(activity, "event scheduled");
+        let description = T(activity, `You have {0} {1} today. The next event '{2}' starts {3}`, value, eventPluralorNot, nextEvent.summary, eventFormatedTime);
+
+        activity.Response.Data.value = value;
+        activity.Response.Data.date = allEvents[0].start.dateTime;
+        activity.Response.Data.color = 'blue';
+        activity.Response.Data.description = description;
+      } else {
+        activity.Response.Data.description = T(activity, `You have no events today.`);
+      }
     }
   } catch (error) {
     $.handleError(activity, error);
