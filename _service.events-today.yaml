@@ -1,0 +1,4 @@
+ServiceName: 'events-today'
+InterfaceName: 'status'
+Description: 'Events Today'
+Interfaces: 'items,daterange,pagination'
