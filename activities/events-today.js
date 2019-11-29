@@ -1,14 +1,16 @@
 'use strict';
 
-const api = require('./common/api');
 const moment = require('moment-timezone');
+
+const api = require('./common/api');
 
 module.exports = async function (activity) {
   try {
     api.initialize(activity);
 
     const dateRange = $.dateRange(activity, 'today');
-    const timeMin = ISODateString(new Date(new Date().toUTCString())); //time now in UTC+0
+
+    const timeMin = ISODateString(new Date(dateRange.startDate));
     const timeMax = ISODateString(new Date(dateRange.endDate));
 
     const allEvents = [];
@@ -71,19 +73,28 @@ function convertResponse(events) {
   // iterate through each issue and extract id, title, etc. into a new array
   for (let i = 0; i < events.length; i++) {
     const raw = events[i];
+
+    const start = moment(raw.start.dateTime);
+    const end = moment(raw.end.dateTime);
+
+    const duration = moment.duration(start.diff(end)).humanize();
+
     const item = {
       id: raw.id,
       title: raw.summary,
       description: raw.description,
       date: raw.start.dateTime,
       link: raw.htmlLink,
+      duration: duration,
+      organizer: raw.organizer,
+      attendees: raw.attendees,
       raw: raw
     };
 
     items.push(item);
   }
 
-  return {items};
+  return items;
 }
 
 /**filters out first upcoming event in google calendar*/
@@ -118,6 +129,7 @@ function getEventFormatedTimeAsString(activity, nextEvent) {
   if (diffInHrs === 0) {
     //events that start in less then 1 hour
     const diffInMins = eventTime.diff(timeNow, 'minutes');
+
     return T(activity, 'in {0} minutes.', diffInMins);
   } else {
     //events that start in more than 1 hour
