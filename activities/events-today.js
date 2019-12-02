@@ -44,19 +44,19 @@ module.exports = async function (activity) {
       activity.Response.Data.title = T(activity, 'Events Today');
       activity.Response.Data.link = 'https://calendar.google.com/calendar';
       activity.Response.Data.linkLabel = T(activity, 'All events');
+      activity.Response.Data.thumbnail = 'https://www.adenin.com/assets/images/wp-images/logo/google-calendar.svg';
       activity.Response.Data.actionable = value > 0;
 
       if (value > 0) {
-        const nextEvent = getNextEvent(allEvents);
-
-        const eventFormatedTime = getEventFormatedTimeAsString(activity, nextEvent);
-        const eventPluralorNot = value > 1 ? T(activity, 'events scheduled') : T(activity, 'event scheduled');
-        const description = T(activity, 'You have {0} {1} today. The next event \'{2}\' starts {3}', value, eventPluralorNot, nextEvent.summary, eventFormatedTime);
+        const first = activity.Response.Data.items[0];
 
         activity.Response.Data.value = value;
-        activity.Response.Data.date = allEvents[0].start.dateTime;
-        activity.Response.Data.description = description;
-        activity.Response.Data.briefing = description;
+        activity.Response.Data.date = first.date;
+        activity.Response.Data.description = value > 1 ? `You have ${value} events today.` : 'You have 1 event today.';
+
+        const when = moment().to(moment(first.date));
+
+        activity.Response.Data.briefing = activity.Response.Data.description + ` The next is '${first.title}' ${when}`;
       } else {
         activity.Response.Data.description = T(activity, 'You have no events today.');
       }
@@ -87,68 +87,46 @@ function convertResponse(events) {
       link: raw.htmlLink,
       duration: duration,
       organizer: raw.organizer,
-      attendees: raw.attendees,
-      raw: raw
+      attendees: raw.attendees ? raw.attendees : []
     };
+
+    const meetingUrl = parseUrl(raw.location);
+
+    if (meetingUrl) {
+      item.onlineMeetingUrl = meetingUrl;
+    } else if (raw.location) {
+      item.location = {
+        title: raw.location
+      };
+    }
+
+    if (raw.attendees) {
+      for (let i = 0; i < raw.attendees.length; i++) {
+        if (!raw.attendees[i].self) continue;
+
+        if (raw.organizer.self) {
+          item.response = {
+            status: 'organizer'
+          };
+
+          break;
+        }
+
+        item.response = {
+          status: raw.attendees[i].responseStatus === 'accepted' ? 'accepted' : 'notaccepted'
+        };
+
+        break;
+      }
+    }
+
+    item.raw = raw;
+    item.showDetails = false;
 
     items.push(item);
   }
 
   return items;
-}
-
-/**filters out first upcoming event in google calendar*/
-function getNextEvent(events) {
-  let nextEvent = null;
-  let nextEventMilis = 0;
-
-  for (let i = 0; i < events.length; i++) {
-    const tempDate = Date.parse(events[i].start.dateTime);
-
-    if (nextEventMilis === 0) {
-      nextEventMilis = tempDate;
-      nextEvent = events[i];
-    }
-
-    if (nextEventMilis > tempDate) {
-      nextEventMilis = tempDate;
-      nextEvent = events[i];
-    }
-  }
-
-  return nextEvent;
-}
-
-//** checks if event is in less then hour, today or tomorrow and returns formated string accordingly */
-function getEventFormatedTimeAsString(activity, nextEvent) {
-  const eventTime = moment(nextEvent.start.dateTime).tz(activity.Context.UserTimezone);
-  const timeNow = moment(new Date());
-
-  const diffInHrs = eventTime.diff(timeNow, 'hours');
-
-  if (diffInHrs === 0) {
-    //events that start in less then 1 hour
-    const diffInMins = eventTime.diff(timeNow, 'minutes');
-
-    return T(activity, 'in {0} minutes.', diffInMins);
-  } else {
-    //events that start in more than 1 hour
-    const diffInDays = eventTime.diff(timeNow, 'days');
-
-    let datePrefix = '';
-    let momentDate = '';
-
-    if (diffInDays === 1) {
-      //events that start tomorrow
-      datePrefix = 'tomorrow ';
-    } else if (diffInDays > 1) {
-      //events that start day after tomorrow and later
-      datePrefix = 'on ';
-      momentDate = eventTime.format('LL') + ' ';
-    }
-
-    return T(activity, '{0}{1}{2}{3}.', T(activity, datePrefix), momentDate, T(activity, 'at '), eventTime.format('LT'));
-  }
 }
 
 /**formats string to match google api requirements*/
@@ -167,17 +145,34 @@ function ISODateString(d) {
 
 //** paginate items[] based on provided pagination */
 function paginateItems(items, pagination) {
-  const pagiantedItems = [];
+  const paginatedItems = [];
   const pageSize = parseInt(pagination.pageSize);
   const offset = (parseInt(pagination.page) - 1) * pageSize;
 
-  if (offset > items.length) return pagiantedItems;
+  if (offset > items.length) return paginatedItems;
 
   for (let i = offset; i < offset + pageSize; i++) {
     if (i >= items.length) break;
 
-    pagiantedItems.push(items[i]);
+    paginatedItems.push(items[i]);
   }
 
-  return pagiantedItems;
+  return paginatedItems;
+}
+
+const urlRegex = /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
+
+function parseUrl(text) {
+  text = text.replace(/\n|\r/g, ' ');
+
+  if (text.search(urlRegex) !== -1) {
+    let url = text.substring(text.search(urlRegex), text.length);
+
+    if (url.indexOf(' ') !== -1) url = url.substring(0, url.indexOf(' '));
+    if (!url.match(/^[a-zA-Z]+:\/\//)) url = 'https://' + url;
+
+    return url;
+  }
+
+  return null;
 }
