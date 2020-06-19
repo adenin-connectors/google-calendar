@@ -45,6 +45,9 @@ module.exports = async function (activity) {
       activity.Response.Data.link = 'https://calendar.google.com/calendar';
       activity.Response.Data.linkLabel = T(activity, 'All events');
       activity.Response.Data.actionable = value > 0;
+      activity.Response.Data.integration = 'Google Calendar';
+      activity.Response.Data.thumbnail = 'https://www.adenin.com/assets/images/wp-images/logo/google-calendar.svg';
+      activity.Response.Data.date = moment().startOf('day').format();
 
       if (value > 0) {
         const nextEvent = getNextEvent(allEvents);
@@ -90,6 +93,8 @@ function convertResponse(events) {
       attendees: raw.attendees,
       raw: raw
     };
+
+    item.organizer.avatar = $.avatarLink(item.organizer.email, item.organizer.email);
 
     items.push(item);
   }
