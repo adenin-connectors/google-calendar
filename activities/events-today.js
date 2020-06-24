@@ -106,10 +106,10 @@ function convertResponse(events) {
     }
 
     if (raw.attendees) {
-      for (let i = 0; i < raw.attendees.length; i++) {
-        raw.attendees[i].avatar = $.avatarLink(raw.attendees[i].email, raw.attendees[i].email);
+      for (let j = 0; j < raw.attendees.length; j++) {
+        raw.attendees[j].avatar = $.avatarLink(raw.attendees[j].email, raw.attendees[j].email);
 
-        if (!raw.attendees[i].self) continue;
+        if (!raw.attendees[j].self) continue;
 
         if (raw.organizer.self) {
           item.response = {
@@ -120,7 +120,7 @@ function convertResponse(events) {
         }
 
         item.response = {
-          status: raw.attendees[i].responseStatus === 'accepted' ? 'accepted' : 'notaccepted'
+          status: raw.attendees[j].responseStatus === 'accepted' ? 'accepted' : 'notaccepted'
         };
 
         break;
