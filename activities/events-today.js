@@ -47,7 +47,6 @@ module.exports = async function (activity) {
       activity.Response.Data.thumbnail = 'https://www.adenin.com/assets/images/wp-images/logo/google-calendar.svg';
       activity.Response.Data.actionable = value > 0;
       activity.Response.Data.integration = 'Google Calendar';
-      activity.Response.Data.thumbnail = 'https://www.adenin.com/assets/images/wp-images/logo/google-calendar.svg';
       activity.Response.Data.date = moment().startOf('day').format();
 
       if (value > 0) {
@@ -166,9 +165,11 @@ function paginateItems(items, pagination) {
   return paginatedItems;
 }
 
-const urlRegex = /[-a-zA-Z0-9@:%_\+.~#?&//=]{2,256}\.[a-z]{2,4}\b(\/[-a-zA-Z0-9@:%_\+.~#?&//=]*)?/gi;
+const urlRegex = /(https?)\:\/\/[A-Za-z0-9\.\-]+(\/[A-Za-z0-9\?\&\=;\+!'\(\)\*\-\._~%]*)*/gi;
 
 function parseUrl(text) {
+  if (!text) return null;
+
   text = text.replace(/\n|\r/g, ' ');
 
   if (text.search(urlRegex) !== -1) {
